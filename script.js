@@ -1,64 +1,77 @@
-const API = 'https://script.google.com/macros/s/AKfycbzD9LiVg2y6YJCqphXyB4jWWDRQZFglPzi83jGdAHxmjNnbg99dzqAZGIB2rDsv73bt/exec';
-let MENU = [], SETTINGS = {};
-});
+// ===== CONFIG =====
+m.innerHTML = '';
 
 
-fetch(`${API}?action=menu`).then(r=>r.json()).then(d=>{MENU=d;render();});
+MENU.forEach(i => {
+const sold = i[4] === 'Sold Out';
 
 
-function render(){
-menu.innerHTML='';
-MENU.forEach(i=>{
-const sold=i[4]==='Sold Out';
-menu.innerHTML+=`
+m.innerHTML += `
 <div class="item">
-<label>
-<input type="checkbox" ${sold?'disabled':''} onchange="toggle(${i[0]})">
-<b>${i[1]}</b> (₹${i[3]})
-</label>
-${sold?'<div class="sold">Sold Out</div>':''}
-<div class="qty" id="q${i[0]}" style="display:none">
-<button onclick="chg(${i[0]},-1)">−</button>
-<span id="v${i[0]}">1</span>
-<button onclick="chg(${i[0]},1)">+</button>
+<div class="name">${i[1]}</div>
+<div class="price">₹${i[3]}</div>
+
+
+<div class="qty">
+<button onclick="changeQty(${i[0]}, -1)" ${sold ? 'disabled' : ''}>−</button>
+<span id="q${i[0]}">0</span>
+<button onclick="changeQty(${i[0]}, 1)" ${sold ? 'disabled' : ''}>+</button>
 </div>
-</div>`;
+
+
+${sold ? '<div class="sold">Sold Out</div>' : ''}
+</div>
+`;
 });
 }
 
 
-function toggle(id){
-const q=document.getElementById('q'+id);
-q.style.display=q.style.display==='none'?'flex':'none';
-checkSubmit();
+// ===== CHANGE QTY =====
+function changeQty(id, delta) {
+const el = document.getElementById('q' + id);
+el.innerText = Math.max(0, +el.innerText + delta);
+validateSubmit();
 }
 
 
-function chg(id,d){
-const v=document.getElementById('v'+id);
-v.innerText=Math.max(1,+v.innerText+d);
+// ===== ENABLE / DISABLE SUBMIT =====
+function validateSubmit() {
+const anySelected = MENU.some(i => +document.getElementById('q' + i[0]).innerText > 0);
+document.getElementById('submitBtn').disabled = !anySelected;
 }
 
 
-function checkSubmit(){
-submitBtn.disabled=!MENU.some(i=>document.getElementById('q'+i[0])?.style.display==='flex');
+// ===== GET SELECTED ITEMS =====
+function getSelectedItems() {
+return MENU
+.filter(i => +document.getElementById('q' + i[0]).innerText > 0)
+.map(i => ({
+foodId: i[0],
+foodName: i[1],
+qty: +document.getElementById('q' + i[0]).innerText
+}));
 }
 
 
-function getItems(){
-return MENU.filter(i=>document.getElementById('q'+i[0])?.style.display==='flex')
-.map(i=>({foodId:i[0],foodName:i[1],qty:document.getElementById('v'+i[0]).innerText}));
+// ===== SUBMIT ORDER (WEBSITE) =====
+function submitOrder() {
+fetch(API, {
+method: 'POST',
+body: JSON.stringify({
+name: document.getElementById('name').value,
+phone: document.getElementById('phone').value,
+items: getSelectedItems()
+})
+}).then(() => alert(SETTINGS.OrderConfirmation || 'Order placed'));
 }
 
 
-function submitOrder(){
-fetch(API,{method:'POST',body:JSON.stringify({
-name:name.value,phone:phone.value,items:getItems()
-})}).then(()=>alert(SETTINGS.OrderConfirmation||'Order placed'));
-}
+// ===== WHATSAPP ORDER =====
+function orderWhatsApp() {
+const msg = getSelectedItems()
+.map(i => `${i.foodName} x ${i.qty}`)
+.join(', ');
 
 
-function orderWhatsApp(){
-const msg=getItems().map(i=>`${i.foodName} x ${i.qty}`).join(', ');
 window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg)}`);
 }
