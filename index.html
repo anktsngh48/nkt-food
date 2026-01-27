@@ -68,11 +68,12 @@
       font-size:16px;
     }
 
-    /* SOLD OUT — FIXED TOP RIGHT */
+    /* SOLD OUT — right + vertically centered */
     .sold{
       position:absolute;
-      top:8px;
-      right:10px;
+      right:12px;
+      top:50%;
+      transform:translateY(-50%);
       color:#c00;
       font-weight:600;
       font-size:14px;
@@ -94,19 +95,23 @@
       border-radius:12px;
       border:none;
       font-size:16px;
+      transition:opacity .2s;
     }
 
     button.primary{background:#0a7cff;color:#fff}
     button.whatsapp{background:#25D366;color:#fff}
 
-    /* visual disabled state */
-    .inactive{opacity:.4}
+    /* inactive visual state */
+    .inactive{
+      opacity:.4;
+      pointer-events:none;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <h2 id="pageTitle">Smelling Delicious Food…</h2>
+    <h2 id="pageTitle">Smelling Delicious Food...</h2>
 
     <div id="menu">
       <p style="text-align:center;color:#666">Please wait while we load…</p>
@@ -127,5 +132,4 @@
   </div>
 
   <script src="script.js"></script>
-</body>
-</html>
+<
