@@ -2,22 +2,25 @@ const API = "https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZK
 
 let MENU = [];
 let SETTINGS = {};
+let isActive = false;
 
 const menuDiv = document.getElementById("menu");
 const orderBtn = document.getElementById("orderBtn");
 const waBtn = document.getElementById("waBtn");
+const nameInput = document.getElementById("name");
+const phoneInput = document.getElementById("phone");
 
-// SETTINGS
+// Load settings
 fetch(API + "?action=settings")
   .then(r => r.json())
   .then(s => {
     SETTINGS = s;
     if (s.PageTitle) {
-      pageTitle.innerText = s.PageTitle;
+      document.getElementById("pageTitle").innerText = s.PageTitle;
     }
   });
 
-// MENU
+// Load menu
 fetch(API + "?action=menu")
   .then(r => r.json())
   .then(data => {
@@ -25,7 +28,8 @@ fetch(API + "?action=menu")
     renderMenu();
   })
   .catch(() => {
-    menuDiv.innerHTML = "<p style='text-align:center;color:red'>Failed to load menu</p>";
+    menuDiv.innerHTML =
+      "<p style='text-align:center;color:red'>Failed to load menu</p>";
   });
 
 function renderMenu() {
@@ -45,13 +49,15 @@ function renderMenu() {
 
         <div class="price">₹${price}</div>
 
-        ${soldOut ? `<div class="sold">Sold Out</div>` : `
-          <div class="qty">
-            <button onclick="changeQty(${id},-1)">−</button>
-            <span id="qty-${id}">0</span>
-            <button onclick="changeQty(${id},1)">+</button>
-          </div>
-        `}
+        ${
+          soldOut
+            ? `<div class="sold">Sold Out</div>`
+            : `<div class="qty">
+                 <button onclick="changeQty(${id},-1)">−</button>
+                 <span id="qty-${id}">0</span>
+                 <button onclick="changeQty(${id},1)">+</button>
+               </div>`
+        }
       </div>
     `;
   });
@@ -59,9 +65,9 @@ function renderMenu() {
 
 function changeQty(id, delta) {
   const span = document.getElementById("qty-" + id);
-  let value = parseInt(span.innerText, 10);
-  value = Math.max(0, value + delta);
-  span.innerText = value;
+  let val = parseInt(span.innerText, 10);
+  val = Math.max(0, val + delta);
+  span.innerText = val;
   updateButtons();
 }
 
@@ -71,8 +77,13 @@ function updateButtons() {
     return el && parseInt(el.innerText, 10) > 0;
   });
 
-  orderBtn.classList.toggle("inactive", !hasItems);
-  waBtn.classList.toggle("inactive", !hasItems);
+  const nameOk = nameInput.value.trim().length > 0;
+  const phoneOk = /^\d+$/.test(phoneInput.value.trim());
+
+  isActive = hasItems && nameOk && phoneOk;
+
+  orderBtn.classList.toggle("inactive", !isActive);
+  waBtn.classList.toggle("inactive", !isActive);
 }
 
 function getSelectedItems() {
@@ -84,37 +95,19 @@ function getSelectedItems() {
   }).filter(Boolean);
 }
 
-function validateCustomer() {
-  const nameVal = name.value.trim();
-  const phoneVal = phone.value.trim();
+// React to input changes
+nameInput.addEventListener("input", updateButtons);
+phoneInput.addEventListener("input", updateButtons);
 
-  if (!nameVal || !phoneVal) {
-    alert("Please enter your name and phone number");
-    return false;
-  }
-
-  if (!/^\d+$/.test(phoneVal)) {
-    alert("Phone number must contain only digits");
-    return false;
-  }
-
-  if (getSelectedItems().length === 0) {
-    alert("Please select at least one item");
-    return false;
-  }
-
-  return true;
-}
-
-// PLACE ORDER
+// Place order
 orderBtn.onclick = () => {
-  if (!validateCustomer()) return;
+  if (!isActive) return;
 
   fetch(API, {
     method: "POST",
     body: JSON.stringify({
-      name: name.value,
-      phone: phone.value,
+      name: nameInput.value,
+      phone: phoneInput.value,
       items: getSelectedItems()
     })
   }).then(() => {
@@ -123,9 +116,9 @@ orderBtn.onclick = () => {
   });
 };
 
-// WHATSAPP
+// WhatsApp order
 waBtn.onclick = () => {
-  if (!validateCustomer()) return;
+  if (!isActive) return;
 
   const msg = getSelectedItems()
     .map(i => `${i.foodName} x ${i.qty}`)
