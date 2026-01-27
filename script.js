@@ -1,8 +1,5 @@
 const API = 'https://script.google.com/macros/s/AKfycbzD9LiVg2y6YJCqphXyB4jWWDRQZFglPzi83jGdAHxmjNnbg99dzqAZGIB2rDsv73bt/exec';
 let MENU = [], SETTINGS = {};
-title.innerText=s.PageTitle||'';
-if(s.TopImage){topImg.src=s.TopImage;topImg.style.display='block'}
-if(s.BottomImage){bottomImg.src=s.BottomImage;bottomImg.style.display='block'}
 });
 
 
