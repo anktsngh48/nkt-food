@@ -1,4 +1,4 @@
-const API = 'PASTE_YOUR_WEB_APP_URL_HERE';
+const API = 'https://script.google.com/macros/s/AKfycbzPfrsTrOciC-7-CuOtuPhStJGDEF1jIsr7rDul5atw538jLhOJfOML0P520NRhyWl-/exec';
 
 
 fetch(`${API}?action=menu`)
