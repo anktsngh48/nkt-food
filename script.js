@@ -1,106 +1,102 @@
-// ===== CONFIG =====
-const API = 'https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZKFiy7jJS4HBwpFKS3G67Y_m0jI2ZweCX7zbrOqTKL/exec';
+const API = "https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZKFiy7jJS4HBwpFKS3G67Y_m0jI2ZweCX7zbrOqTKL/exec";
 
 let MENU = [];
 let SETTINGS = {};
 
-// ===== LOAD SETTINGS =====
-fetch(`${API}?action=settings`)
-  .then(res => res.json())
+// Load settings
+fetch(API + "?action=settings")
+  .then(r => r.json())
   .then(s => {
     SETTINGS = s;
-    document.getElementById('title').innerText = s.PageTitle || '';
-  })
-  .catch(err => console.error('Settings fetch error', err));
+    if (s.PageTitle) {
+      document.getElementById("pageTitle").innerText = s.PageTitle;
+    }
+  });
 
-// ===== LOAD MENU =====
-fetch(`${API}?action=menu`)
-  .then(res => res.json())
+// Load menu
+fetch(API + "?action=menu")
+  .then(r => r.json())
   .then(data => {
     MENU = data;
     renderMenu();
-  })
-  .catch(err => console.error('Menu fetch error', err));
+  });
 
-// ===== RENDER MENU =====
 function renderMenu() {
-  const menuDiv = document.getElementById('menu');
-  menuDiv.innerHTML = '';
+  const menuDiv = document.getElementById("menu");
+  menuDiv.innerHTML = "";
 
   MENU.forEach(item => {
-    const soldOut = item[4] === 'Sold Out';
+    const id = item[0];
+    const name = item[1];
+    const price = item[3];
+    const soldOut = item[4] === "Sold Out";
 
     menuDiv.innerHTML += `
       <div class="item">
-        <div class="name">${item[1]}</div>
-        <div class="price">₹${item[3]}</div>
+        <div class="name">${name}</div>
+        <div class="price">₹${price}</div>
 
-        <div class="qty">
-          <button onclick="changeQty(${item[0]}, -1)" ${soldOut ? 'disabled' : ''}>−</button>
-          <span id="q${item[0]}">0</span>
-          <button onclick="changeQty(${item[0]}, 1)" ${soldOut ? 'disabled' : ''}>+</button>
-        </div>
-
-        ${soldOut ? '<div class="sold">Sold Out</div>' : ''}
+        ${soldOut ? `<div class="sold">Sold Out</div>` : `
+          <div class="qty">
+            <button onclick="changeQty(${id}, -1)">−</button>
+            <span id="qty-${id}">0</span>
+            <button onclick="changeQty(${id}, 1)">+</button>
+          </div>
+        `}
       </div>
     `;
   });
 }
 
-// ===== CHANGE QUANTITY =====
 function changeQty(id, delta) {
-  const qtyEl = document.getElementById('q' + id);
-  qtyEl.innerText = Math.max(0, Number(qtyEl.innerText) + delta);
-  validateSubmit();
+  const span = document.getElementById("qty-" + id);
+  let value = parseInt(span.innerText);
+  value = Math.max(0, value + delta);
+  span.innerText = value;
+  updateButtons();
 }
 
-// ===== ENABLE / DISABLE SUBMIT BUTTON =====
-function validateSubmit() {
-  const hasItem = MENU.some(
-    item => Number(document.getElementById('q' + item[0]).innerText) > 0
-  );
-  document.getElementById('submitBtn').disabled = !hasItem;
+function updateButtons() {
+  const hasItems = MENU.some(i => {
+    const el = document.getElementById("qty-" + i[0]);
+    return el && parseInt(el.innerText) > 0;
+  });
+
+  document.getElementById("orderBtn").disabled = !hasItems;
+  document.getElementById("waBtn").disabled = !hasItems;
 }
 
-// ===== GET SELECTED ITEMS =====
 function getSelectedItems() {
   return MENU
-    .filter(item => Number(document.getElementById('q' + item[0]).innerText) > 0)
-    .map(item => ({
-      foodId: item[0],
-      foodName: item[1],
-      qty: Number(document.getElementById('q' + item[0]).innerText)
-    }));
+    .map(i => {
+      const qtyEl = document.getElementById("qty-" + i[0]);
+      return qtyEl && parseInt(qtyEl.innerText) > 0
+        ? { foodId: i[0], foodName: i[1], qty: qtyEl.innerText }
+        : null;
+    })
+    .filter(Boolean);
 }
 
-// ===== SUBMIT ORDER (WEBSITE) =====
-function submitOrder() {
+// Place Order
+document.getElementById("orderBtn").onclick = () => {
   const items = getSelectedItems();
-  if (items.length === 0) return;
-
   fetch(API, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value,
-      items: items
+      name: name.value,
+      phone: phone.value,
+      items
     })
   }).then(() => {
-    alert(SETTINGS.OrderConfirmation || 'Order placed');
+    alert(SETTINGS.OrderConfirmation || "Order placed successfully");
     location.reload();
   });
-}
+};
 
-// ===== WHATSAPP ORDER =====
-function orderWhatsApp() {
+// WhatsApp Order
+document.getElementById("waBtn").onclick = () => {
   const items = getSelectedItems();
-  if (items.length === 0) return;
-
-  const message = items
-    .map(i => `${i.foodName} x ${i.qty}`)
-    .join(', ');
-
-  window.open(
-    `https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(message)}`
-  );
-}
+  const msg = items.map(i => `${i.foodName} x ${i.qty}`).join(", ");
+  const text = `Order:%0A${msg}`;
+  window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${text}`, "_blank");
+};
