@@ -1,70 +1,41 @@
 <!DOCTYPE html>
-<img id="topImg">
-<div class="wrap">
-<h2 id="title"></h2>
-<div id="menu"></div>
-
-
-<input id="name" placeholder="Your Name" style="width:100%;padding:10px">
-<br><br>
-<input id="phone" placeholder="Phone" style="width:100%;padding:10px">
-
-
-<button id="submitBtn" class="main" onclick="submitOrder()" disabled>Place Order</button>
-<button class="main" onclick="orderWhatsApp()">Order via WhatsApp</button>
-</div>
-<img id="bottomImg">
-
-
-<script src="script.js"></script>
-</body>
-</html>
-```html
-<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NKT Food</title>
 <style>
-body { font-family: Arial; margin: 0; padding: 0; }
-img { width: 100%; height: auto; }
-.container { padding: 12px; }
-.item { border-bottom: 1px solid #ddd; padding: 10px 0; }
-.qty { display: flex; align-items: center; gap: 8px; }
-button { padding: 8px 12px; }
-.sold { color: red; font-weight: bold; }
+body{font-family:system-ui;margin:0;background:#f5f5f5}
+img{width:100%;height:auto;object-fit:cover}
+.wrap{padding:14px}
+h2{text-align:center}
+.item{background:#fff;padding:12px;margin-bottom:10px;border-radius:10px}
+.qty{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px}
+.qty button{width:36px;height:36px;font-size:18px}
+.sold{color:#c00;font-weight:600;margin-top:6px}
+button.main{width:100%;padding:14px;margin-top:12px;font-size:16px;border-radius:10px}
+button:disabled{opacity:.4}
+input{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #ccc}
 </style>
 </head>
 <body>
 
 
-<img id="topImg" />
-<div class="container">
+<img id="topImg" style="display:none">
+<div class="wrap">
 <h2 id="title"></h2>
 <div id="menu"></div>
-<br>
-<input id="name" placeholder="Your Name" />
-<input id="phone" placeholder="Phone" />
-<br><br>
-<button onclick="submitOrder()">Place Order</button>
-<button onclick="orderWhatsApp()">Order via WhatsApp</button>
+
+
+<input id="name" placeholder="Your Name">
+<input id="phone" placeholder="Phone Number">
+
+
+<button id="submitBtn" class="main" onclick="submitOrder()" disabled>Place Order</button>
+<button class="main" onclick="orderWhatsApp()">Order via WhatsApp</button>
 </div>
-<img id="bottomImg" />
+<img id="bottomImg" style="display:none">
 
 
-<script src="script.js"></script>
-</body>
-</html>
-```html
-<!DOCTYPE html>
-<html>
-<head>
-<title>Food Ordering</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-<h2>Today's Menu</h2>
-<div id="menu"></div>
 <script src="script.js"></script>
 </body>
 </html>
