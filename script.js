@@ -3,21 +3,17 @@ const API = "https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZK
 let MENU = [];
 let SETTINGS = {};
 
-// Show loading state immediately
-document.getElementById("menu").innerHTML =
-  "<p style='text-align:center;color:#666'>Please wait…</p>";
-
-// Load settings
+// SETTINGS
 fetch(API + "?action=settings")
   .then(r => r.json())
   .then(s => {
     SETTINGS = s;
     if (s.PageTitle) {
-      document.getElementById("pageTitle").innerText = s.PageTitle;
+      pageTitle.innerText = s.PageTitle;
     }
   });
 
-// Load menu
+// MENU
 fetch(API + "?action=menu")
   .then(r => r.json())
   .then(data => {
@@ -25,13 +21,11 @@ fetch(API + "?action=menu")
     renderMenu();
   })
   .catch(() => {
-    document.getElementById("menu").innerHTML =
-      "<p style='text-align:center;color:red'>Failed to load menu</p>";
+    menu.innerHTML = "<p style='text-align:center;color:red'>Failed to load menu</p>";
   });
 
 function renderMenu() {
-  const menuDiv = document.getElementById("menu");
-  menuDiv.innerHTML = "";
+  menu.innerHTML = "";
 
   MENU.forEach(item => {
     const id = item[0];
@@ -39,16 +33,19 @@ function renderMenu() {
     const price = item[3];
     const soldOut = item[4] === "Sold Out";
 
-    menuDiv.innerHTML += `
+    menu.innerHTML += `
       <div class="item">
-        <div class="name">${name}</div>
-        <div class="price">₹${price}</div>
+        <div class="left">
+          <div class="name">${name}</div>
+          <div class="price">₹${price}</div>
+          ${soldOut ? `<div class="sold">Sold Out</div>` : ""}
+        </div>
 
-        ${soldOut ? `<div class="sold">Sold Out</div>` : `
+        ${soldOut ? "" : `
           <div class="qty">
-            <button onclick="changeQty(${id}, -1)">−</button>
+            <button onclick="changeQty(${id},-1)">−</button>
             <span id="qty-${id}">0</span>
-            <button onclick="changeQty(${id}, 1)">+</button>
+            <button onclick="changeQty(${id},1)">+</button>
           </div>
         `}
       </div>
@@ -58,9 +55,9 @@ function renderMenu() {
 
 function changeQty(id, delta) {
   const span = document.getElementById("qty-" + id);
-  let value = parseInt(span.innerText);
-  value = Math.max(0, value + delta);
-  span.innerText = value;
+  let val = parseInt(span.innerText);
+  val = Math.max(0, val + delta);
+  span.innerText = val;
   updateButtons();
 }
 
@@ -70,19 +67,17 @@ function updateButtons() {
     return el && parseInt(el.innerText) > 0;
   });
 
-  document.getElementById("orderBtn").disabled = !hasItems;
-  document.getElementById("waBtn").disabled = !hasItems;
+  orderBtn.disabled = !hasItems;
+  waBtn.disabled = !hasItems;
 }
 
 function getSelectedItems() {
-  return MENU
-    .map(i => {
-      const qtyEl = document.getElementById("qty-" + i[0]);
-      return qtyEl && parseInt(qtyEl.innerText) > 0
-        ? { foodId: i[0], foodName: i[1], qty: qtyEl.innerText }
-        : null;
-    })
-    .filter(Boolean);
+  return MENU.map(i => {
+    const q = document.getElementById("qty-" + i[0]);
+    return q && parseInt(q.innerText) > 0
+      ? { foodId: i[0], foodName: i[1], qty: q.innerText }
+      : null;
+  }).filter(Boolean);
 }
 
 function validateCustomer() {
@@ -90,20 +85,24 @@ function validateCustomer() {
     alert("Please enter your name and phone number");
     return false;
   }
+
+  if (!/^\d+$/.test(phone.value)) {
+    alert("Phone number must contain only digits");
+    return false;
+  }
   return true;
 }
 
-// Place Order
-document.getElementById("orderBtn").onclick = () => {
+// PLACE ORDER
+orderBtn.onclick = () => {
   if (!validateCustomer()) return;
 
-  const items = getSelectedItems();
   fetch(API, {
     method: "POST",
     body: JSON.stringify({
       name: name.value,
       phone: phone.value,
-      items
+      items: getSelectedItems()
     })
   }).then(() => {
     alert(SETTINGS.OrderConfirmation || "Order placed successfully");
@@ -111,12 +110,14 @@ document.getElementById("orderBtn").onclick = () => {
   });
 };
 
-// WhatsApp Order
-document.getElementById("waBtn").onclick = () => {
+// WHATSAPP
+waBtn.onclick = () => {
   if (!validateCustomer()) return;
 
   const items = getSelectedItems();
   const msg = items.map(i => `${i.foodName} x ${i.qty}`).join(", ");
-  const text = `Order:%0A${msg}`;
-  window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${text}`, "_blank");
+  window.open(
+    `https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg)}`,
+    "_blank"
+  );
 };
