@@ -5,7 +5,7 @@ let SETTINGS = {};
 
 // Show loading state immediately
 document.getElementById("menu").innerHTML =
-  "<p style='text-align:center;color:#666'>Loading delicious menu…</p>";
+  "<p style='text-align:center;color:#666'>Loading delicious menu…</br>Please wait</p>";
 
 // Load settings
 fetch(API + "?action=settings")
