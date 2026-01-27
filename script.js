@@ -1,77 +1,106 @@
 // ===== CONFIG =====
-m.innerHTML = '';
+const API = 'https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZKFiy7jJS4HBwpFKS3G67Y_m0jI2ZweCX7zbrOqTKL/exec';
 
+let MENU = [];
+let SETTINGS = {};
 
-MENU.forEach(i => {
-const sold = i[4] === 'Sold Out';
+// ===== LOAD SETTINGS =====
+fetch(`${API}?action=settings`)
+  .then(res => res.json())
+  .then(s => {
+    SETTINGS = s;
+    document.getElementById('title').innerText = s.PageTitle || '';
+  })
+  .catch(err => console.error('Settings fetch error', err));
 
+// ===== LOAD MENU =====
+fetch(`${API}?action=menu`)
+  .then(res => res.json())
+  .then(data => {
+    MENU = data;
+    renderMenu();
+  })
+  .catch(err => console.error('Menu fetch error', err));
 
-m.innerHTML += `
-<div class="item">
-<div class="name">${i[1]}</div>
-<div class="price">₹${i[3]}</div>
+// ===== RENDER MENU =====
+function renderMenu() {
+  const menuDiv = document.getElementById('menu');
+  menuDiv.innerHTML = '';
 
+  MENU.forEach(item => {
+    const soldOut = item[4] === 'Sold Out';
 
-<div class="qty">
-<button onclick="changeQty(${i[0]}, -1)" ${sold ? 'disabled' : ''}>−</button>
-<span id="q${i[0]}">0</span>
-<button onclick="changeQty(${i[0]}, 1)" ${sold ? 'disabled' : ''}>+</button>
-</div>
+    menuDiv.innerHTML += `
+      <div class="item">
+        <div class="name">${item[1]}</div>
+        <div class="price">₹${item[3]}</div>
 
+        <div class="qty">
+          <button onclick="changeQty(${item[0]}, -1)" ${soldOut ? 'disabled' : ''}>−</button>
+          <span id="q${item[0]}">0</span>
+          <button onclick="changeQty(${item[0]}, 1)" ${soldOut ? 'disabled' : ''}>+</button>
+        </div>
 
-${sold ? '<div class="sold">Sold Out</div>' : ''}
-</div>
-`;
-});
+        ${soldOut ? '<div class="sold">Sold Out</div>' : ''}
+      </div>
+    `;
+  });
 }
 
-
-// ===== CHANGE QTY =====
+// ===== CHANGE QUANTITY =====
 function changeQty(id, delta) {
-const el = document.getElementById('q' + id);
-el.innerText = Math.max(0, +el.innerText + delta);
-validateSubmit();
+  const qtyEl = document.getElementById('q' + id);
+  qtyEl.innerText = Math.max(0, Number(qtyEl.innerText) + delta);
+  validateSubmit();
 }
 
-
-// ===== ENABLE / DISABLE SUBMIT =====
+// ===== ENABLE / DISABLE SUBMIT BUTTON =====
 function validateSubmit() {
-const anySelected = MENU.some(i => +document.getElementById('q' + i[0]).innerText > 0);
-document.getElementById('submitBtn').disabled = !anySelected;
+  const hasItem = MENU.some(
+    item => Number(document.getElementById('q' + item[0]).innerText) > 0
+  );
+  document.getElementById('submitBtn').disabled = !hasItem;
 }
-
 
 // ===== GET SELECTED ITEMS =====
 function getSelectedItems() {
-return MENU
-.filter(i => +document.getElementById('q' + i[0]).innerText > 0)
-.map(i => ({
-foodId: i[0],
-foodName: i[1],
-qty: +document.getElementById('q' + i[0]).innerText
-}));
+  return MENU
+    .filter(item => Number(document.getElementById('q' + item[0]).innerText) > 0)
+    .map(item => ({
+      foodId: item[0],
+      foodName: item[1],
+      qty: Number(document.getElementById('q' + item[0]).innerText)
+    }));
 }
-
 
 // ===== SUBMIT ORDER (WEBSITE) =====
 function submitOrder() {
-fetch(API, {
-method: 'POST',
-body: JSON.stringify({
-name: document.getElementById('name').value,
-phone: document.getElementById('phone').value,
-items: getSelectedItems()
-})
-}).then(() => alert(SETTINGS.OrderConfirmation || 'Order placed'));
-}
+  const items = getSelectedItems();
+  if (items.length === 0) return;
 
+  fetch(API, {
+    method: 'POST',
+    body: JSON.stringify({
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
+      items: items
+    })
+  }).then(() => {
+    alert(SETTINGS.OrderConfirmation || 'Order placed');
+    location.reload();
+  });
+}
 
 // ===== WHATSAPP ORDER =====
 function orderWhatsApp() {
-const msg = getSelectedItems()
-.map(i => `${i.foodName} x ${i.qty}`)
-.join(', ');
+  const items = getSelectedItems();
+  if (items.length === 0) return;
 
+  const message = items
+    .map(i => `${i.foodName} x ${i.qty}`)
+    .join(', ');
 
-window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg)}`);
+  window.open(
+    `https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(message)}`
+  );
 }
