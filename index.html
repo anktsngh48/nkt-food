@@ -8,21 +8,69 @@
   <style>
     body{margin:0;font-family:system-ui,Arial;background:#f4f4f4}
     .wrap{max-width:520px;margin:auto;padding:14px}
-    h2{text-align:center;margin:10px 0 16px}
 
-    .item{background:#fff;border-radius:12px;padding:12px;margin-bottom:12px}
-    .name{font-weight:600;font-size:16px}
-    .price{color:#555;font-size:14px}
+    h2{text-align:center;margin:12px 0 18px;color:#333}
 
-    .qty{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:10px}
-    .qty button{width:38px;height:38px;border-radius:50%;border:1px solid #ccc;font-size:20px}
-    .qty span{min-width:24px;text-align:center;font-size:16px}
+    .item{
+      background:#fff;
+      border-radius:12px;
+      padding:12px;
+      margin-bottom:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+    }
 
-    .sold{color:#c00;font-weight:600;margin-top:8px;text-align:center}
+    .left .name{font-weight:600;font-size:16px}
+    .left .price{color:#555;font-size:14px;margin-top:2px}
 
-    input{width:100%;padding:12px;margin:8px 0;border-radius:10px;border:1px solid #ccc;font-size:15px}
+    .qty{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
 
-    button.main{width:100%;padding:14px;margin-top:10px;border-radius:12px;border:none;font-size:16px}
+    .qty button{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      border:1px solid #ccc;
+      font-size:20px;
+      background:#fff;
+    }
+
+    .qty span{
+      min-width:20px;
+      text-align:center;
+      font-size:16px;
+    }
+
+    .sold{
+      color:#c00;
+      font-weight:600;
+      margin-top:6px;
+      text-align:right;
+      width:100%;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin:8px 0;
+      border-radius:10px;
+      border:1px solid #ccc;
+      font-size:15px;
+    }
+
+    button.main{
+      width:100%;
+      padding:14px;
+      margin-top:10px;
+      border-radius:12px;
+      border:none;
+      font-size:16px;
+    }
+
     button.primary{background:#0a7cff;color:#fff}
     button.whatsapp{background:#25D366;color:#fff}
     button:disabled{opacity:.4}
@@ -31,12 +79,21 @@
 
 <body>
   <div class="wrap">
-    <h2 id="pageTitle">Loading Delicious Menu...</h2>
+    <h2 id="pageTitle">Loading Delicious Food...</h2>
 
-    <div id="menu"></div>
+    <div id="menu">
+      <p style="text-align:center;color:#666">Loading today’s menu…</p>
+    </div>
 
     <input id="name" placeholder="Your Name">
-    <input id="phone" placeholder="Phone Number">
+
+    <input
+      id="phone"
+      placeholder="Phone Number"
+      type="tel"
+      inputmode="numeric"
+      pattern="[0-9]*"
+    >
 
     <button id="orderBtn" class="main primary" disabled>Place Order</button>
     <button id="waBtn" class="main whatsapp" disabled>Order via WhatsApp</button>
