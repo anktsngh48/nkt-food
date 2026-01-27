@@ -1,131 +1,102 @@
-const API = "https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZKFiy7jJS4HBwpFKS3G67Y_m0jI2ZweCX7zbrOqTKL/exec";
+const API = "https://script.google.com/macros/s/AKfycbxLFasUYbd-XvDHPAtgdHcf0lcyuA7TTykrxVW5u1uigyCZ8mJoZWeDuaRxHYcDY7QJ/exec";
 
-let MENU = [];
-let SETTINGS = {};
-let isActive = false;
+let MENU=[], SETTINGS={}, active=false;
 
-const menuDiv = document.getElementById("menu");
+const totalEl = document.getElementById("total");
 const orderBtn = document.getElementById("orderBtn");
 const waBtn = document.getElementById("waBtn");
 const nameInput = document.getElementById("name");
 const phoneInput = document.getElementById("phone");
 
-// Load settings
-fetch(API + "?action=settings")
-  .then(r => r.json())
-  .then(s => {
-    SETTINGS = s;
-    if (s.PageTitle) {
-      document.getElementById("pageTitle").innerText = s.PageTitle;
+fetch(API+"?action=settings").then(r=>r.json()).then(s=>{
+  SETTINGS=s;
+  if(s.PageTitle) pageTitle.innerText=s.PageTitle;
+});
+
+fetch(API+"?action=menu").then(r=>r.json()).then(d=>{
+  MENU=d;
+  render();
+});
+
+function render(){
+  menu.innerHTML='';
+  MENU.forEach(i=>{
+    const sold=i[4]==="Sold Out";
+    menu.innerHTML+=`
+    <div class="item">
+      <div class="left"><div class="name">${i[1]}</div></div>
+      <div class="price">₹${i[3]}</div>
+      ${
+        sold
+        ? `<div class="sold">Sold Out</div>`
+        : `<div class="qty">
+             <button onclick="chg(${i[0]},-1)">−</button>
+             <span id="q${i[0]}">0</span>
+             <button onclick="chg(${i[0]},1)">+</button>
+           </div>`
+      }
+    </div>`;
+  });
+}
+
+function chg(id,d){
+  const v=document.getElementById("q"+id);
+  v.innerText=Math.max(0,+v.innerText+d);
+  update();
+}
+
+function update(){
+  let total=0;
+  let hasQty=false;
+
+  MENU.forEach(i=>{
+    const q=document.getElementById("q"+i[0]);
+    if(q){
+      const qty=+q.innerText;
+      if(qty>0){
+        total+=qty*i[3];
+        hasQty=true;
+      }
     }
   });
 
-// Load menu
-fetch(API + "?action=menu")
-  .then(r => r.json())
-  .then(data => {
-    MENU = data;
-    renderMenu();
-  })
-  .catch(() => {
-    menuDiv.innerHTML =
-      "<p style='text-align:center;color:red'>Failed to load menu</p>";
-  });
+  totalEl.innerText=total;
 
-function renderMenu() {
-  menuDiv.innerHTML = "";
+  active = hasQty &&
+           nameInput.value.trim() &&
+           /^\d+$/.test(phoneInput.value);
 
-  MENU.forEach(item => {
-    const id = item[0];
-    const name = item[1];
-    const price = item[3];
-    const soldOut = item[4] === "Sold Out";
-
-    menuDiv.innerHTML += `
-      <div class="item">
-        <div class="left">
-          <div class="name">${name}</div>
-        </div>
-
-        <div class="price">₹${price}</div>
-
-        ${
-          soldOut
-            ? `<div class="sold">Sold Out</div>`
-            : `<div class="qty">
-                 <button onclick="changeQty(${id},-1)">−</button>
-                 <span id="qty-${id}">0</span>
-                 <button onclick="changeQty(${id},1)">+</button>
-               </div>`
-        }
-      </div>
-    `;
-  });
+  orderBtn.classList.toggle("inactive",!active);
+  waBtn.classList.toggle("inactive",!active);
 }
 
-function changeQty(id, delta) {
-  const span = document.getElementById("qty-" + id);
-  let val = parseInt(span.innerText, 10);
-  val = Math.max(0, val + delta);
-  span.innerText = val;
-  updateButtons();
-}
+nameInput.oninput=update;
+phoneInput.oninput=update;
 
-function updateButtons() {
-  const hasItems = MENU.some(i => {
-    const el = document.getElementById("qty-" + i[0]);
-    return el && parseInt(el.innerText, 10) > 0;
-  });
-
-  const nameOk = nameInput.value.trim().length > 0;
-  const phoneOk = /^\d+$/.test(phoneInput.value.trim());
-
-  isActive = hasItems && nameOk && phoneOk;
-
-  orderBtn.classList.toggle("inactive", !isActive);
-  waBtn.classList.toggle("inactive", !isActive);
-}
-
-function getSelectedItems() {
-  return MENU.map(i => {
-    const q = document.getElementById("qty-" + i[0]);
-    return q && parseInt(q.innerText, 10) > 0
-      ? { foodId: i[0], foodName: i[1], qty: q.innerText }
+function items(){
+  return MENU.map(i=>{
+    const q=document.getElementById("q"+i[0]);
+    return q&&+q.innerText>0
+      ? {foodId:i[0],foodName:i[1],qty:q.innerText}
       : null;
   }).filter(Boolean);
 }
 
-// React to input changes
-nameInput.addEventListener("input", updateButtons);
-phoneInput.addEventListener("input", updateButtons);
-
-// Place order
-orderBtn.onclick = () => {
-  if (!isActive) return;
-
-  fetch(API, {
-    method: "POST",
-    body: JSON.stringify({
-      name: nameInput.value,
-      phone: phoneInput.value,
-      items: getSelectedItems()
+orderBtn.onclick=()=>{
+  if(!active) return;
+  fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      name:nameInput.value,
+      phone:phoneInput.value,
+      items:items(),
+      total:+totalEl.innerText
     })
-  }).then(() => {
-    alert(SETTINGS.OrderConfirmation || "Order placed successfully");
-    location.reload();
-  });
+  }).then(()=>alert(SETTINGS.OrderConfirmation||"Order placed"));
 };
 
-// WhatsApp order
-waBtn.onclick = () => {
-  if (!isActive) return;
-
-  const msg = getSelectedItems()
-    .map(i => `${i.foodName} x ${i.qty}`)
-    .join(", ");
-
-  window.open(
-    `https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg)}`,
-    "_blank"
-  );
+waBtn.onclick=()=>{
+  if(!active) return;
+  const msg=items().map(i=>`${i.foodName} x ${i.qty}`).join(", ");
+  window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg+"\nTotal: ₹"+totalEl.innerText)}`);
 };
