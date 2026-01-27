@@ -13,7 +13,7 @@ fetch(API + "?action=settings")
   .then(s => {
     SETTINGS = s;
     if (s.PageTitle) {
-      document.getElementById("pageTitle").innerText = s.PageTitle;
+      pageTitle.innerText = s.PageTitle;
     }
   });
 
@@ -41,20 +41,17 @@ function renderMenu() {
       <div class="item">
         <div class="left">
           <div class="name">${name}</div>
-          ${soldOut ? `<div class="sold">Sold Out</div>` : ""}
         </div>
 
         <div class="price">₹${price}</div>
 
-        ${
-          soldOut
-            ? ""
-            : `<div class="qty">
-                 <button onclick="changeQty(${id},-1)">−</button>
-                 <span id="qty-${id}">0</span>
-                 <button onclick="changeQty(${id},1)">+</button>
-               </div>`
-        }
+        ${soldOut ? `<div class="sold">Sold Out</div>` : `
+          <div class="qty">
+            <button onclick="changeQty(${id},-1)">−</button>
+            <span id="qty-${id}">0</span>
+            <button onclick="changeQty(${id},1)">+</button>
+          </div>
+        `}
       </div>
     `;
   });
@@ -74,8 +71,8 @@ function updateButtons() {
     return el && parseInt(el.innerText, 10) > 0;
   });
 
-  orderBtn.disabled = !hasItems;
-  waBtn.disabled = !hasItems;
+  orderBtn.classList.toggle("inactive", !hasItems);
+  waBtn.classList.toggle("inactive", !hasItems);
 }
 
 function getSelectedItems() {
@@ -88,8 +85,8 @@ function getSelectedItems() {
 }
 
 function validateCustomer() {
-  const nameVal = document.getElementById("name").value.trim();
-  const phoneVal = document.getElementById("phone").value.trim();
+  const nameVal = name.value.trim();
+  const phoneVal = phone.value.trim();
 
   if (!nameVal || !phoneVal) {
     alert("Please enter your name and phone number");
@@ -98,6 +95,11 @@ function validateCustomer() {
 
   if (!/^\d+$/.test(phoneVal)) {
     alert("Phone number must contain only digits");
+    return false;
+  }
+
+  if (getSelectedItems().length === 0) {
+    alert("Please select at least one item");
     return false;
   }
 
