@@ -3,6 +3,7 @@ const API = "https://script.google.com/macros/s/AKfycbxLFasUYbd-XvDHPAtgdHcf0lcy
 let MENU = [];
 let SETTINGS = {};
 let active = false;
+let orderPlaced = false;
 
 const menuDiv = document.getElementById("menu");
 const totalEl = document.getElementById("total");
@@ -27,7 +28,7 @@ fetch(API + "?action=menu")
   .then(data => {
     MENU = data;
     renderMenu();
-    update(); // initial calculation
+    update();
   });
 
 /* ---------- RENDER MENU ---------- */
@@ -37,7 +38,7 @@ function renderMenu() {
   MENU.forEach(item => {
     const id = item[0];
     const name = item[1];
-    const price = Number(item[3]); // ✅ force number
+    const price = Number(item[3]);
     const soldOut = item[4] === "Sold Out";
 
     menuDiv.innerHTML += `
@@ -64,20 +65,24 @@ function renderMenu() {
 
 /* ---------- QTY CHANGE ---------- */
 function changeQty(id, delta) {
+  if (orderPlaced) return;
+
   const span = document.getElementById("qty-" + id);
   let val = Number(span.innerText);
   val = Math.max(0, val + delta);
   span.innerText = val;
-  update(); // ✅ recalc total every change
+  update();
 }
 
 /* ---------- UPDATE TOTAL & BUTTON STATE ---------- */
 function update() {
+  if (orderPlaced) return;
+
   let total = 0;
   let hasItems = false;
 
   MENU.forEach(item => {
-    const price = Number(item[3]); // ✅ force number
+    const price = Number(item[3]);
     const span = document.getElementById("qty-" + item[0]);
 
     if (span) {
@@ -89,7 +94,7 @@ function update() {
     }
   });
 
-  totalEl.innerText = total; // ✅ LIVE total
+  totalEl.innerText = total;
 
   const nameOk = nameInput.value.trim().length > 0;
   const phoneOk = /^\d+$/.test(phoneInput.value.trim());
@@ -121,7 +126,7 @@ function getSelectedItems() {
 
 /* ---------- PLACE ORDER ---------- */
 orderBtn.onclick = () => {
-  if (!active) return;
+  if (!active || orderPlaced) return;
 
   fetch(API, {
     method: "POST",
@@ -132,14 +137,24 @@ orderBtn.onclick = () => {
       total: Number(totalEl.innerText)
     })
   }).then(() => {
-    alert(SETTINGS.OrderConfirmation || "Order placed successfully");
-    location.reload();
+    orderPlaced = true;
+
+    // 🔒 Lock UI
+    orderBtn.innerText = "Order Placed";
+    orderBtn.classList.remove("primary");
+    orderBtn.classList.add("inactive");
+
+    waBtn.classList.add("inactive");
+
+    document.querySelectorAll(".qty button").forEach(b => b.disabled = true);
+    nameInput.disabled = true;
+    phoneInput.disabled = true;
   });
 };
 
 /* ---------- WHATSAPP ORDER ---------- */
 waBtn.onclick = () => {
-  if (!active) return;
+  if (!active || orderPlaced) return;
 
   const items = getSelectedItems()
     .map(i => `${i.foodName} x ${i.qty}`)
