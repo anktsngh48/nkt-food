@@ -1,9 +1,5 @@
-const API = 'https://script.google.com/macros/s/AKfycbyTj61LJnkPVmk8zsXY9z2wDUg494_tn3_yKSZY-aCD7iybbHDb-KCMvbKRWNGfRr8s/exec';
-let MENU=[], SETTINGS={};
-
-
-fetch(`${API}?action=settings`).then(r=>r.json()).then(s=>{
-SETTINGS=s;
+const API = 'https://script.google.com/macros/s/AKfycbyVaKA78FKzdwuR_x47xCTwGQP-46X6vC_qiumEiUAX8Tmty7H1Di57oFhf6YNNgxmk/exec';
+let MENU = [], SETTINGS = {};
 title.innerText=s.PageTitle||'';
 if(s.TopImage){topImg.src=s.TopImage;topImg.style.display='block'}
 if(s.BottomImage){bottomImg.src=s.BottomImage;bottomImg.style.display='block'}
