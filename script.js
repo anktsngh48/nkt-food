@@ -1,4 +1,4 @@
-const API = 'https://script.google.com/macros/s/AKfycbyVaKA78FKzdwuR_x47xCTwGQP-46X6vC_qiumEiUAX8Tmty7H1Di57oFhf6YNNgxmk/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzD9LiVg2y6YJCqphXyB4jWWDRQZFglPzi83jGdAHxmjNnbg99dzqAZGIB2rDsv73bt/exec';
 let MENU = [], SETTINGS = {};
 title.innerText=s.PageTitle||'';
 if(s.TopImage){topImg.src=s.TopImage;topImg.style.display='block'}
