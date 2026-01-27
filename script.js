@@ -1,27 +1,26 @@
-const API = 'https://script.google.com/macros/s/AKfycbzmk7QwPVgkQLqOoclWo4wMSOI2yzKbc-tpVfxn-rB9sb_ZxDeQBVMvfyU72uyQXjih/exec';
+const API = 'https://script.google.com/macros/s/AKfycbx4Fz1hHfvZVu8FSJdIXjZFfDIi8ilpyNL1g3xpC6k_x8kMWvfGnuw9hqigsPFtkmHf/exec';
+let MENU=[], SETTINGS={};
 
-let MENU = [];
-window.whatsappNumber = s.WhatsAppNumber;
+
+fetch(`${API}?action=settings`).then(r=>r.json()).then(s=>{
+SETTINGS=s;
+title.innerText=s.PageTitle;
+topImg.src=s.TopImage||'';
+bottomImg.src=s.BottomImage||'';
 });
 
 
-fetch(`${API}?action=menu`).then(r=>r.json()).then(d=>{
-MENU = d;
-render();
-});
+fetch(`${API}?action=menu`).then(r=>r.json()).then(d=>{MENU=d;render();});
 
 
-function render() {
-const m = document.getElementById('menu');
-m.innerHTML = '';
-MENU.forEach(i => {
-const sold = i[4] === 'Sold Out';
-m.innerHTML += `
+function render(){
+menu.innerHTML='';
+MENU.forEach(i=>{
+const sold=i[4]==='Sold Out';
+menu.innerHTML+=`
 <div class="item">
-<label>
-<input type="checkbox" ${sold?'disabled':''} onchange="toggleQty(${i[0]})"> ${i[1]} (₹${i[3]})
-</label>
-${sold ? '<div class="sold">Sold Out</div>' : ''}
+<label><input type="checkbox" ${sold?'disabled':''} onchange="toggle(${i[0]})"> ${i[1]} (₹${i[3]})</label>
+${sold?'<div class="sold">Sold Out</div>':''}
 <div class="qty" id="q${i[0]}" style="display:none">
 <button onclick="chg(${i[0]},-1)">-</button>
 <span id="v${i[0]}">1</span>
@@ -32,35 +31,38 @@ ${sold ? '<div class="sold">Sold Out</div>' : ''}
 }
 
 
-function toggleQty(id) {
-const q = document.getElementById('q'+id);
-q.style.display = q.style.display === 'none' ? 'flex' : 'none';
+function toggle(id){
+const q=document.getElementById('q'+id);
+q.style.display=q.style.display==='none'?'flex':'none';
+checkSubmit();
 }
 
 
-function chg(id, d) {
-const v = document.getElementById('v'+id);
-let n = Math.max(1, parseInt(v.innerText) + d);
-v.innerText = n;
+function chg(id,d){
+const v=document.getElementById('v'+id);
+v.innerText=Math.max(1,+v.innerText+d);
 }
 
 
-function submitOrder() {
-const items = [];
-MENU.forEach(i => {
-const q = document.getElementById('q'+i[0]);
-if (q && q.style.display === 'flex') {
-items.push({ foodId:i[0], foodName:i[1], qty:document.getElementById('v'+i[0]).innerText });
+function checkSubmit(){
+submitBtn.disabled=!MENU.some(i=>document.getElementById('q'+i[0])?.style.display==='flex');
 }
-});
+
+
+function getItems(){
+return MENU.filter(i=>document.getElementById('q'+i[0])?.style.display==='flex')
+.map(i=>({foodId:i[0],foodName:i[1],qty:document.getElementById('v'+i[0]).innerText}));
+}
+
+
+function submitOrder(){
 fetch(API,{method:'POST',body:JSON.stringify({
-name:document.getElementById('name').value,
-phone:document.getElementById('phone').value,
-items
-})}).then(()=>alert('Order placed'));
+name:name.value,phone:phone.value,items:getItems()
+})}).then(()=>alert(SETTINGS.OrderConfirmation));
 }
 
 
-function orderWhatsApp() {
-window.open(`https://wa.me/${window.whatsappNumber}`);
+function orderWhatsApp(){
+const msg=getItems().map(i=>`${i.foodName} x ${i.qty}`).join(', ');
+window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg)}`);
 }
