@@ -1,12 +1,12 @@
-const API = 'https://script.google.com/macros/s/AKfycbx4Fz1hHfvZVu8FSJdIXjZFfDIi8ilpyNL1g3xpC6k_x8kMWvfGnuw9hqigsPFtkmHf/exec';
+const API = 'https://script.google.com/macros/s/AKfycbyTj61LJnkPVmk8zsXY9z2wDUg494_tn3_yKSZY-aCD7iybbHDb-KCMvbKRWNGfRr8s/exec';
 let MENU=[], SETTINGS={};
 
 
 fetch(`${API}?action=settings`).then(r=>r.json()).then(s=>{
 SETTINGS=s;
-title.innerText=s.PageTitle;
-topImg.src=s.TopImage||'';
-bottomImg.src=s.BottomImage||'';
+title.innerText=s.PageTitle||'';
+if(s.TopImage){topImg.src=s.TopImage;topImg.style.display='block'}
+if(s.BottomImage){bottomImg.src=s.BottomImage;bottomImg.style.display='block'}
 });
 
 
@@ -19,10 +19,13 @@ MENU.forEach(i=>{
 const sold=i[4]==='Sold Out';
 menu.innerHTML+=`
 <div class="item">
-<label><input type="checkbox" ${sold?'disabled':''} onchange="toggle(${i[0]})"> ${i[1]} (₹${i[3]})</label>
+<label>
+<input type="checkbox" ${sold?'disabled':''} onchange="toggle(${i[0]})">
+<b>${i[1]}</b> (₹${i[3]})
+</label>
 ${sold?'<div class="sold">Sold Out</div>':''}
 <div class="qty" id="q${i[0]}" style="display:none">
-<button onclick="chg(${i[0]},-1)">-</button>
+<button onclick="chg(${i[0]},-1)">−</button>
 <span id="v${i[0]}">1</span>
 <button onclick="chg(${i[0]},1)">+</button>
 </div>
@@ -58,7 +61,7 @@ return MENU.filter(i=>document.getElementById('q'+i[0])?.style.display==='flex')
 function submitOrder(){
 fetch(API,{method:'POST',body:JSON.stringify({
 name:name.value,phone:phone.value,items:getItems()
-})}).then(()=>alert(SETTINGS.OrderConfirmation));
+})}).then(()=>alert(SETTINGS.OrderConfirmation||'Order placed'));
 }
 
 
