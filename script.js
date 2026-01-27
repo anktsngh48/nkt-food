@@ -1,102 +1,154 @@
 const API = "https://script.google.com/macros/s/AKfycbxLFasUYbd-XvDHPAtgdHcf0lcyuA7TTykrxVW5u1uigyCZ8mJoZWeDuaRxHYcDY7QJ/exec";
 
-let MENU=[], SETTINGS={}, active=false;
+let MENU = [];
+let SETTINGS = {};
+let active = false;
 
+const menuDiv = document.getElementById("menu");
 const totalEl = document.getElementById("total");
 const orderBtn = document.getElementById("orderBtn");
 const waBtn = document.getElementById("waBtn");
 const nameInput = document.getElementById("name");
 const phoneInput = document.getElementById("phone");
 
-fetch(API+"?action=settings").then(r=>r.json()).then(s=>{
-  SETTINGS=s;
-  if(s.PageTitle) pageTitle.innerText=s.PageTitle;
-});
+/* ---------- LOAD SETTINGS ---------- */
+fetch(API + "?action=settings")
+  .then(r => r.json())
+  .then(s => {
+    SETTINGS = s;
+    if (s.PageTitle) {
+      document.getElementById("pageTitle").innerText = s.PageTitle;
+    }
+  });
 
-fetch(API+"?action=menu").then(r=>r.json()).then(d=>{
-  MENU=d;
-  render();
-});
+/* ---------- LOAD MENU ---------- */
+fetch(API + "?action=menu")
+  .then(r => r.json())
+  .then(data => {
+    MENU = data;
+    renderMenu();
+    update(); // initial calculation
+  });
 
-function render(){
-  menu.innerHTML='';
-  MENU.forEach(i=>{
-    const sold=i[4]==="Sold Out";
-    menu.innerHTML+=`
-    <div class="item">
-      <div class="left"><div class="name">${i[1]}</div></div>
-      <div class="price">₹${i[3]}</div>
-      ${
-        sold
-        ? `<div class="sold">Sold Out</div>`
-        : `<div class="qty">
-             <button onclick="chg(${i[0]},-1)">−</button>
-             <span id="q${i[0]}">0</span>
-             <button onclick="chg(${i[0]},1)">+</button>
-           </div>`
-      }
-    </div>`;
+/* ---------- RENDER MENU ---------- */
+function renderMenu() {
+  menuDiv.innerHTML = "";
+
+  MENU.forEach(item => {
+    const id = item[0];
+    const name = item[1];
+    const price = Number(item[3]); // ✅ force number
+    const soldOut = item[4] === "Sold Out";
+
+    menuDiv.innerHTML += `
+      <div class="item">
+        <div class="left">
+          <div class="name">${name}</div>
+        </div>
+
+        <div class="price">₹${price}</div>
+
+        ${
+          soldOut
+            ? `<div class="sold">Sold Out</div>`
+            : `<div class="qty">
+                 <button onclick="changeQty(${id}, -1)">−</button>
+                 <span id="qty-${id}">0</span>
+                 <button onclick="changeQty(${id}, 1)">+</button>
+               </div>`
+        }
+      </div>
+    `;
   });
 }
 
-function chg(id,d){
-  const v=document.getElementById("q"+id);
-  v.innerText=Math.max(0,+v.innerText+d);
-  update();
+/* ---------- QTY CHANGE ---------- */
+function changeQty(id, delta) {
+  const span = document.getElementById("qty-" + id);
+  let val = Number(span.innerText);
+  val = Math.max(0, val + delta);
+  span.innerText = val;
+  update(); // ✅ recalc total every change
 }
 
-function update(){
-  let total=0;
-  let hasQty=false;
+/* ---------- UPDATE TOTAL & BUTTON STATE ---------- */
+function update() {
+  let total = 0;
+  let hasItems = false;
 
-  MENU.forEach(i=>{
-    const q=document.getElementById("q"+i[0]);
-    if(q){
-      const qty=+q.innerText;
-      if(qty>0){
-        total+=qty*i[3];
-        hasQty=true;
+  MENU.forEach(item => {
+    const price = Number(item[3]); // ✅ force number
+    const span = document.getElementById("qty-" + item[0]);
+
+    if (span) {
+      const qty = Number(span.innerText);
+      if (qty > 0) {
+        total += qty * price;
+        hasItems = true;
       }
     }
   });
 
-  totalEl.innerText=total;
+  totalEl.innerText = total; // ✅ LIVE total
 
-  active = hasQty &&
-           nameInput.value.trim() &&
-           /^\d+$/.test(phoneInput.value);
+  const nameOk = nameInput.value.trim().length > 0;
+  const phoneOk = /^\d+$/.test(phoneInput.value.trim());
 
-  orderBtn.classList.toggle("inactive",!active);
-  waBtn.classList.toggle("inactive",!active);
+  active = hasItems && nameOk && phoneOk;
+
+  orderBtn.classList.toggle("inactive", !active);
+  waBtn.classList.toggle("inactive", !active);
 }
 
-nameInput.oninput=update;
-phoneInput.oninput=update;
+/* ---------- INPUT LISTENERS ---------- */
+nameInput.addEventListener("input", update);
+phoneInput.addEventListener("input", update);
 
-function items(){
-  return MENU.map(i=>{
-    const q=document.getElementById("q"+i[0]);
-    return q&&+q.innerText>0
-      ? {foodId:i[0],foodName:i[1],qty:q.innerText}
-      : null;
+/* ---------- SELECTED ITEMS ---------- */
+function getSelectedItems() {
+  return MENU.map(item => {
+    const span = document.getElementById("qty-" + item[0]);
+    if (span && Number(span.innerText) > 0) {
+      return {
+        foodId: item[0],
+        foodName: item[1],
+        qty: Number(span.innerText)
+      };
+    }
+    return null;
   }).filter(Boolean);
 }
 
-orderBtn.onclick=()=>{
-  if(!active) return;
-  fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      name:nameInput.value,
-      phone:phoneInput.value,
-      items:items(),
-      total:+totalEl.innerText
+/* ---------- PLACE ORDER ---------- */
+orderBtn.onclick = () => {
+  if (!active) return;
+
+  fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      name: nameInput.value.trim(),
+      phone: phoneInput.value.trim(),
+      items: getSelectedItems(),
+      total: Number(totalEl.innerText)
     })
-  }).then(()=>alert(SETTINGS.OrderConfirmation||"Order placed"));
+  }).then(() => {
+    alert(SETTINGS.OrderConfirmation || "Order placed successfully");
+    location.reload();
+  });
 };
 
-waBtn.onclick=()=>{
-  if(!active) return;
-  const msg=items().map(i=>`${i.foodName} x ${i.qty}`).join(", ");
-  window.open(`https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg+"\nTotal: ₹"+totalEl.innerText)}`);
+/* ---------- WHATSAPP ORDER ---------- */
+waBtn.onclick = () => {
+  if (!active) return;
+
+  const items = getSelectedItems()
+    .map(i => `${i.foodName} x ${i.qty}`)
+    .join(", ");
+
+  const msg = `${items}\nTotal: ₹${totalEl.innerText}`;
+
+  window.open(
+    `https://wa.me/${SETTINGS.WhatsAppNumber}?text=${encodeURIComponent(msg)}`,
+    "_blank"
+  );
 };
