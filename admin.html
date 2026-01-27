@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NKT Food – Orders</title>
+</head>
+<body>
+<h2>Today's Orders</h2>
+<table border="1" cellpadding="6" id="t"></table>
+<script>
+const API='PASTE_NEW_WEB_APP_URL';
+fetch(`${API}?action=orders`).then(r=>r.json()).then(d=>{
+t.innerHTML='<tr><th>Time</th><th>Item</th><th>Name</th><th>Phone</th><th>Qty</th></tr>'+
+d.map(o=>`<tr><td>${o[0]}</td><td>${o[2]}</td><td>${o[3]}</td><td>${o[4]}</td><td>${o[5]}</td></tr>`).join('');
+});
+</script>
+</body>
+</html>
