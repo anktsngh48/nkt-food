@@ -1,6 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NKT Food</title>
+<style>
+body { font-family: Arial; margin: 0; padding: 0; }
+img { width: 100%; height: auto; }
+.container { padding: 12px; }
+.item { border-bottom: 1px solid #ddd; padding: 10px 0; }
+.qty { display: flex; align-items: center; gap: 8px; }
+button { padding: 8px 12px; }
+.sold { color: red; font-weight: bold; }
+</style>
+</head>
+<body>
+
+
+<img id="topImg" />
+<div class="container">
+<h2 id="title"></h2>
+<div id="menu"></div>
+<br>
+<input id="name" placeholder="Your Name" />
+<input id="phone" placeholder="Phone" />
+<br><br>
+<button onclick="submitOrder()">Place Order</button>
+<button onclick="orderWhatsApp()">Order via WhatsApp</button>
+</div>
+<img id="bottomImg" />
+
+
+<script src="script.js"></script>
+</body>
+</html>
+```html
+<!DOCTYPE html>
+<html>
+<head>
 <title>Food Ordering</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
