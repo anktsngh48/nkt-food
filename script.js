@@ -1,4 +1,4 @@
-const API = 'https://script.google.com/macros/s/AKfycbzPfrsTrOciC-7-CuOtuPhStJGDEF1jIsr7rDul5atw538jLhOJfOML0P520NRhyWl-/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzmk7QwPVgkQLqOoclWo4wMSOI2yzKbc-tpVfxn-rB9sb_ZxDeQBVMvfyU72uyQXjih/exec';
 
 
 fetch(`${API}?action=menu`)
