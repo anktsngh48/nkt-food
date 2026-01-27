@@ -3,6 +3,10 @@ const API = "https://script.google.com/macros/s/AKfycbwtFI3cxa3w1kqDihF_4eCMdqZK
 let MENU = [];
 let SETTINGS = {};
 
+// Show loading state immediately
+document.getElementById("menu").innerHTML =
+  "<p style='text-align:center;color:#666'>Loading delicious menu…</p>";
+
 // Load settings
 fetch(API + "?action=settings")
   .then(r => r.json())
@@ -19,6 +23,10 @@ fetch(API + "?action=menu")
   .then(data => {
     MENU = data;
     renderMenu();
+  })
+  .catch(() => {
+    document.getElementById("menu").innerHTML =
+      "<p style='text-align:center;color:red'>Failed to load menu</p>";
   });
 
 function renderMenu() {
@@ -77,8 +85,18 @@ function getSelectedItems() {
     .filter(Boolean);
 }
 
+function validateCustomer() {
+  if (!name.value.trim() || !phone.value.trim()) {
+    alert("Please enter your name and phone number");
+    return false;
+  }
+  return true;
+}
+
 // Place Order
 document.getElementById("orderBtn").onclick = () => {
+  if (!validateCustomer()) return;
+
   const items = getSelectedItems();
   fetch(API, {
     method: "POST",
@@ -95,6 +113,8 @@ document.getElementById("orderBtn").onclick = () => {
 
 // WhatsApp Order
 document.getElementById("waBtn").onclick = () => {
+  if (!validateCustomer()) return;
+
   const items = getSelectedItems();
   const msg = items.map(i => `${i.foodName} x ${i.qty}`).join(", ");
   const text = `Order:%0A${msg}`;
