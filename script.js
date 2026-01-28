@@ -133,7 +133,7 @@ totalEl.onclick=()=>{
 
 pinInput.onchange=()=>{
   if(pinInput.value===String(SETTINGS.AdminPassword)){
-    window.location.href="https://anktsngh48.github.io/nkt-edit-sheet";
+    window.location.href="https://anktsngh48.github.io/nkt-data-manager";
   }
   pinInput.value="";
 };
