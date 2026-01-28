@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NKT Food</title>
 
 <style>
@@ -18,19 +18,11 @@ h2{text-align:center;margin:10px 0 14px}
   position:relative;
   display:flex;
   align-items:center;
-  min-height:40px; /* 🔽 smaller */
+  min-height:40px;
 }
 
-.left{
-  flex:1;
-  padding-right:70px;
-}
-
-.name{
-  font-size:15px;
-  font-weight:600;
-  line-height:1.25;
-}
+.left{flex:1;padding-right:70px}
+.name{font-size:15px;font-weight:600;line-height:1.25}
 
 .price{
   position:absolute;
@@ -43,19 +35,10 @@ h2{text-align:center;margin:10px 0 14px}
   pointer-events:none;
 }
 
-.qty{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
+.qty{display:flex;align-items:center;gap:8px}
 .qty button{
-  width:30px;
-  height:30px;
-  border-radius:50%;
-  border:1px solid #ccc;
-  background:#fff;
-  font-size:18px;
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid #ccc;background:#fff;font-size:18px
 }
 
 .qty span{min-width:18px;text-align:center}
@@ -82,7 +65,7 @@ h2{text-align:center;margin:10px 0 14px}
 }
 
 input{
-  width:93%;
+  width:100%;
   padding:12px;
   margin:8px 0;
   border-radius:10px;
@@ -107,21 +90,26 @@ button.whatsapp{background:#25D366;color:#fff}
 
 <body>
 <div class="wrap">
+
   <h2 id="pageTitle">Smelling Delicious Food...</h2>
 
   <div id="menu"></div>
 
-  <!-- ✅ TOTAL PRICE -->
   <div class="total">
-    <span>Total</span>
-    <span>₹<span id="total">0</span></span>
+    <span id="totalLabel">Total</span>
+    <span>₹<span id="total" style="cursor:pointer">0</span></span>
   </div>
+
+  <!-- hidden admin pin input -->
+  <input id="adminPin" type="number" inputmode="numeric"
+         style="position:absolute;opacity:0;height:0;width:0">
 
   <input id="name" placeholder="Your Name">
   <input id="phone" placeholder="Phone Number" type="tel" inputmode="numeric">
 
   <button id="orderBtn" class="main primary inactive">Place Order</button>
   <button id="waBtn" class="main whatsapp inactive">Order via WhatsApp</button>
+
 </div>
 
 <script src="script.js"></script>
